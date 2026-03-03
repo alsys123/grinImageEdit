@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>iPad Image Editor with Paste Mode</title>
+<style>
+  body { font-family: sans-serif; margin: 20px; }
+  #toolbar { margin-bottom: 10px; }
+  canvas {
+    border: 1px solid #333;
+    touch-action: none;
+    cursor: crosshair;
+    max-width: 100%;
+    height: auto;
+  }
+  .active {
+    background: #4caf50;
+    color: white;
+  }
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <input type="file" id="fileInput" accept="image/*">
+  <button id="copyBtn" disabled>Copy</button>
+  <button id="cutBtn" disabled>Cut</button>
+  <button id="pasteModeBtn" disabled>Paste Mode</button>
+  <button id="exportBtn">Export PNG</button>
+</div>
+
+<canvas id="canvas" width="800" height="600"></canvas>
+
+<script>
+const fileInput = document.getElementById('fileInput');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+const copyBtn = document.getElementById('copyBtn');
+const cutBtn = document.getElementById('cutBtn');
+const pasteModeBtn = document.getElementById('pasteModeBtn');
+const exportBtn = document.getElementById('exportBtn');
+
+let img = new Image();
+let hasImage = false;
+
+let isSelecting = false;
+let pasteMode = false;
+
+let startX = 0, startY = 0;
+let currentX = 0, currentY = 0;
+
+let selection = null;
+let clipboard = null;
+
+// -------------------------
+// Load image
+// -------------------------
+fileInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = ev => {
+    img = new Image();
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      hasImage = true;
+      selection = null;
+      clipboard = null;
+      copyBtn.disabled = true;
+      cutBtn.disabled = true;
+      pasteModeBtn.disabled = true;
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+// -------------------------
+// Coordinate correction for scaled canvas
+// -------------------------
+function getCanvasCoords(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return {
+    x: (clientX - rect.left) * scaleX,
+    y: (clientY - rect.top) * scaleY
+  };
+}
+
+// -------------------------
+// Mouse selection
+// -------------------------
+canvas.addEventListener('mousedown', e => {
+  if (!hasImage || pasteMode) return;
+  const pos = getCanvasCoords(e.clientX, e.clientY);
+  startX = pos.x;
+  startY = pos.y;
+  currentX = pos.x;
+  currentY = pos.y;
+  isSelecting = true;
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (!isSelecting || !hasImage || pasteMode) return;
+  const pos = getCanvasCoords(e.clientX, e.clientY);
+  currentX = pos.x;
+  currentY = pos.y;
+  redraw();
+  drawSelectionRect();
+});
+
+canvas.addEventListener('mouseup', () => finishSelection());
+
+// -------------------------
+// Touch selection
+// -------------------------
+canvas.addEventListener('touchstart', e => {
+  if (!hasImage || pasteMode) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  const pos = getCanvasCoords(t.clientX, t.clientY);
+  startX = pos.x;
+  startY = pos.y;
+  currentX = pos.x;
+  currentY = pos.y;
+  isSelecting = true;
+});
+
+canvas.addEventListener('touchmove', e => {
+  if (!isSelecting || !hasImage || pasteMode) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  const pos = getCanvasCoords(t.clientX, t.clientY);
+  currentX = pos.x;
+  currentY = pos.y;
+  redraw();
+  drawSelectionRect();
+});
+
+canvas.addEventListener('touchend', e => {
+  if (!pasteMode) finishSelection();
+});
+
+// -------------------------
+// Paste Mode tap handler
+// -------------------------
+canvas.addEventListener('click', e => {
+  if (!pasteMode || !clipboard) return;
+  const pos = getCanvasCoords(e.clientX, e.clientY);
+  ctx.putImageData(clipboard, pos.x, pos.y);
+  img.src = canvas.toDataURL();
+});
+
+canvas.addEventListener('touchend', e => {
+  if (!pasteMode || !clipboard) return;
+  const t = e.changedTouches[0];
+  const pos = getCanvasCoords(t.clientX, t.clientY);
+  ctx.putImageData(clipboard, pos.x, pos.y);
+  img.src = canvas.toDataURL();
+});
+
+// -------------------------
+// Finish selection
+// -------------------------
+function finishSelection() {
+  if (!isSelecting || !hasImage) return;
+  isSelecting = false;
+
+  const x = Math.min(startX, currentX);
+  const y = Math.min(startY, currentY);
+  const w = Math.abs(currentX - startX);
+  const h = Math.abs(currentY - startY);
+
+  if (w > 0 && h > 0) {
+    selection = { x, y, w, h };
+    copyBtn.disabled = false;
+    cutBtn.disabled = false;
+  } else {
+    selection = null;
+    copyBtn.disabled = true;
+    cutBtn.disabled = true;
+  }
+
+  redraw();
+  if (selection) drawSelectionRect();
+}
+
+// -------------------------
+// Copy / Cut
+// -------------------------
+copyBtn.addEventListener('click', () => {
+  if (!selection) return;
+  clipboard = ctx.getImageData(selection.x, selection.y, selection.w, selection.h);
+  pasteModeBtn.disabled = false;
+});
+
+cutBtn.addEventListener('click', () => {
+  if (!selection) return;
+  clipboard = ctx.getImageData(selection.x, selection.y, selection.w, selection.h);
+  ctx.clearRect(selection.x, selection.y, selection.w, selection.h);
+  img.src = canvas.toDataURL();
+  selection = null;
+  copyBtn.disabled = true;
+  cutBtn.disabled = true;
+  pasteModeBtn.disabled = false;
+});
+
+// -------------------------
+// Paste Mode toggle
+// -------------------------
+pasteModeBtn.addEventListener('click', () => {
+  if (!clipboard) return;
+  pasteMode = !pasteMode;
+  pasteModeBtn.classList.toggle('active', pasteMode);
+});
+
+// -------------------------
+// Export PNG
+// -------------------------
+exportBtn.addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.download = "image.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+});
+
+// -------------------------
+// Drawing helpers
+// -------------------------
+function redraw() {
+  if (!hasImage) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(img, 0, 0);
+}
+
+function drawSelectionRect() {
+  if (!selection && !isSelecting) return;
+
+  const x = isSelecting ? Math.min(startX, currentX) : selection.x;
+  const y = isSelecting ? Math.min(startY, currentY) : selection.y;
+  const w = isSelecting ? Math.abs(currentX - startX) : selection.w;
+  const h = isSelecting ? Math.abs(currentY - startY) : selection.h;
+
+  ctx.save();
+  ctx.strokeStyle = 'red';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([6, 4]);
+  ctx.strokeRect(x, y, w, h);
+  ctx.restore();
+}
+</script>
+
+</body>
+</html>
