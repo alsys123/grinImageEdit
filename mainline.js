@@ -382,3 +382,19 @@ function isInsidePastedObject(x, y) {
     );
 }
 
+// -------------------------
+// Double-tap / double-click to activate Paste Mode
+// -------------------------
+let lastTapTime = 0;
+
+canvas.addEventListener('touchend', e => {
+    const now = Date.now();
+    if (now - lastTapTime < 300) {   // double-tap threshold
+        activatePasteMode();
+    }
+    lastTapTime = now;
+});
+
+canvas.addEventListener('dblclick', e => {
+    activatePasteMode();
+});
