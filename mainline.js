@@ -33,6 +33,23 @@ let draggingPasted = false;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
 
+function activatePasteMode() {
+    if (!clipboard) return;  // can't paste without something copied
+
+    pasteMode = true;
+    pasteModeBtn.classList.add('active');
+
+    // clear selection mode
+    selection = null;
+    isSelecting = false;
+
+    // clear pasted-object selection
+    pastedSelected = false;
+    draggingPasted = false;
+
+    safeRedraw();
+}
+
 // -------------------------
 // Load image
 // -------------------------
