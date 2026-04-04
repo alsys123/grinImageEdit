@@ -65,9 +65,20 @@ fileInput.addEventListener('change', e => {
     const reader = new FileReader();
     reader.onload = ev => {
 	img = new Image();
+
+	/*
 	img.onload = () => {
 	    canvas.width = img.width;
 	    canvas.height = img.height;
+
+   // ⭐ Make the canvas fully white BEFORE drawing the image
+    ctx.save();
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+
+	    
 	    ctx.drawImage(img, 0, 0);
 	    hasImage = true;
 
@@ -81,7 +92,42 @@ fileInput.addEventListener('change', e => {
 	    pasteModeBtn.disabled = true;
 
 	    redraw();
-	};
+	    };
+	*/
+	img.onload = () => {
+
+    // Create a temporary canvas
+    const temp = document.createElement('canvas');
+    temp.width = img.width;
+    temp.height = img.height;
+    const tctx = temp.getContext('2d');
+
+    // Fill temp canvas with white
+    tctx.fillStyle = "white";
+    tctx.fillRect(0, 0, temp.width, temp.height);
+
+    // Draw the image ON TOP of the white background
+    tctx.drawImage(img, 0, 0);
+
+    // Now copy the flattened image into your real canvas
+    canvas.width = temp.width;
+    canvas.height = temp.height;
+    ctx.drawImage(temp, 0, 0);
+
+    hasImage = true;
+
+    selection = null;
+    clipboard = null;
+    pastedObject = null;
+    pastedSelected = false;
+
+    copyBtn.disabled = true;
+    cutBtn.disabled = true;
+    pasteModeBtn.disabled = true;
+
+    redraw();
+};
+
 	img.src = ev.target.result;
     };
     reader.readAsDataURL(file);
@@ -276,20 +322,13 @@ copyBtn.addEventListener('click', () => {
     
     clipboard = ctx.getImageData(recX, recY, recW,recH);
 
-    //    clipboard = ctx.getImageData(selection.x, selection.y, selection.w, selection.h);
     pasteModeBtn.disabled = false;
 
-    // Clear selection rectangle
-    //selection = null;
-//    isSelecting = false;
-    
     safeRedraw();
 });
 
 cutBtn.addEventListener('click', () => {
     if (!selection) return;
-
-//    cLog("let do a cut");
 
     let recX = selection.x + 2;
     let recY = selection.y + 2;
@@ -297,56 +336,26 @@ cutBtn.addEventListener('click', () => {
     let recH = selection.h - 4;
     clipboard = ctx.getImageData(recX, recY, recW,recH);
 
-//    clipboard = ctx.getImageData(selection.x, selection.y, selection.w, selection.h);
-
-//    ctx.clearRect(selection.x, selection.y, selection.w, selection.h);
     recX = selection.x - 2;
     recY = selection.y - 2;
     recW = selection.w + 4;
     recH = selection.h + 4;
-    ctx.clearRect(recX, recY, recW,recH);
-
-//    return;
     
-//    redraw(); // remove overlays
+    ctx.fillStyle = "white";
+    ctx.fillRect(recX, recY, recW,recH);
+//    ctx.clearRect(recX, recY, recW,recH);
 
     img.src = canvas.toDataURL();
 
-//    selection             = true;
-//    isSelecting           = true;
-//
-//    copyBtn.disabled      = true;
-//    cutBtn.disabled       = true;
-
-    // ...?? here ...
-    
-//    pasteModeBtn.disabled = false;
-//
-// console.log("CUT: pasteModeBtn.disabled BEFORE =", pasteModeBtn.disabled);
-//pasteModeBtn.disabled = false;
-//console.log("CUT: pasteModeBtn.disabled AFTER =", pasteModeBtn.disabled);
-    
-    //    console.log("before .. pasteModeBtn =", pasteModeBtn);
-//
-//    activatePasteMode(); // ??? .. here  
-//
-//    console.log("after .. pasteModeBtn =", pasteModeBtn);
-
-    //    safeRedraw();
-       // Remove the red rectangle (same as copy)
+    // Remove the red rectangle (same as copy)
     selection = null;
     isSelecting = false;
-
-    // Redraw without the red rectangle (same as copy)
-//    safeRedraw();
 
     // Force image reload
     img.onload = () => {
         pasteModeBtn.disabled = false;
         safeRedraw();
     };
-
-//    img.src = canvas.toDataURL() + "?t=" + performance.now();
 
 });
 
@@ -396,11 +405,24 @@ pasteModeBtn.addEventListener('click', () => {
 // -------------------------
 // Export PNG
 // -------------------------
-exportBtn.addEventListener('click', () => {
+/*
+  exportBtn.addEventListener('click', () => {
     const link = document.createElement('a');
     link.download = "image.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
+    });
+*/
+
+exportBtn.addEventListener('click', () => {
+    canvas.toBlob((blob) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = "image.png";
+        link.click();
+        URL.revokeObjectURL(url);
+    }, "image/png");
 });
 
 // -------------------------
@@ -454,7 +476,7 @@ function drawSelectionRect() {
 
 //    cLog("...DONE drawing");
     
-}
+}//drawSelectionRect
 
 function drawPastedOutline() {
     if (!pastedSelected || !pastedObject) return;
@@ -470,7 +492,7 @@ function drawPastedOutline() {
 	pastedObject.h
     );
     ctx.restore();
-}
+}//drawPastedOutline
 
 function isInsidePastedObject(x, y) {
     if (!pastedObject) return false;

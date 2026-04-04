@@ -10,14 +10,16 @@
 </head>
 <body>
 
-  <h1>Image Edit - v11</h1>
-<br>
-<div id="toolbar">
+  <h1>Image Edit</h1>
+  <h3>Ideal for editing Chord Charts (v0.1.14)</h3>
+  
+  <br>
+  <div id="toolbar">
   <input type="file" id="fileInput" accept="image/*">
   <button id="copyBtn" disabled>Copy</button>
   <button id="cutBtn" disabled>Cut</button>
   <button id="pasteModeBtn" disabled>Paste</button>
-  <button id="exportBtn">Export PNG</button>
+  <button id="exportBtn">Save File</button>
   <button id="helpBtn">Help</button>
 </div>
 
@@ -32,20 +34,47 @@
       </div>
       
       <div class="help-actions">
+	<!--
         <button id="checkBtn">Check Answers</button>
         <button id="fillAllBtn">Fill All Answers</button>
         <button id="enableDrawingBtn">Enable Drawing Mode</button>
         <button id="enableDictionaryBtn">Enable Dictionary Lookup</button>
         <button id="resetPuzzleBtn">Reset Puzzle</button>
+	-->
       </div>
       <div class="help-buttons">
 
         <div class="help-title-info">Help Information</div>
+<div class="help-buttons">
+  <button data-help="about">
+    <span class="help-icon-svg">📘</span> About
+  </button>
 
-        <button data-help="drawing">Drawing Guide</button>
-        <button data-help="letters">Letter Shapes</button>
-        <button data-help="joiners">Joiner Tool</button>
-        <button data-help="saving">Saving Puzzle</button>
+  <button data-help="copy">
+    <span class="help-icon-svg">📋</span> Copy
+  </button>
+
+  <button data-help="cutPaste">
+    <span class="help-icon-svg">✂️</span> Cut & Paste
+  </button>
+
+  <button data-help="saving">
+    <span class="help-icon-svg">💾</span> Saving
+  </button>
+
+<button data-help="faq">
+    <span class="help-icon-svg">❓</span> FAQ
+</button>
+
+</div>
+
+	<!--
+        <button data-help="about">About</button>
+        <button data-help="copy">Copy</button>
+        <button data-help="cutPaste">Cut & Paste</button>
+        <button data-help="saving">Saving</button>
+	-->
+	
       </div>
 </div>
 

@@ -30,8 +30,10 @@
   position: absolute;
   top: 50px;
   left: 50%;
-  transform: translateX(-50%);
-  width: 425px; /*was 320 */
+  transform: translateX(-50%); 
+/*  width: 475px; */
+  width: auto;
+  max-width: 700px;
   background: #fff;
   border: 2px solid #333;
   border-radius: 8px;
@@ -70,11 +72,25 @@
   gap: 6px;
   justify-content: center;
 }
-
+/*
 .help-buttons button {
   padding: 6px 5px;
   font-size: 14px;
 }
+*/
+
+.help-buttons button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 5px;
+}
+
+.help-icon-svg {
+    font-size: 18px;
+    line-height: 1;
+}
+
 .help-actions {
   margin-top: 15px;
   display: grid;
@@ -292,4 +308,15 @@ body.dictionaryLookup-enabled::before {
 .help-close:hover {
     color: #000;
     transform: scale(1.2);
+}
+
+.help-buttons button.active-help {
+    background: #333;
+    color: white;
+    font-weight: bold;
+    border: 2px solid #000;
+}
+
+.help-buttons button.active-help .help-icon-svg {
+    filter: brightness(1.3);
 }
