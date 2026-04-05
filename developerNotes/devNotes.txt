@@ -1,1 +1,73 @@
 
+pinch to zoom 
+// -------------------------
+// Pinch to Zoom (iPad)
+// -------------------------
+let pinchStartDist = null;
+let pinchStartScale = 1;
+let currentScale = 1;
+let panX = 0;
+let panY = 0;
+let pinchStartPanX = 0;
+let pinchStartPanY = 0;
+let pinchMidStart = null;
+
+function getPinchDist(touches) {
+  const dx = touches[0].clientX - touches[1].clientX;
+  const dy = touches[0].clientY - touches[1].clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function getPinchMid(touches) {
+  return {
+    x: (touches[0].clientX + touches[1].clientX) / 2,
+    y: (touches[0].clientY + touches[1].clientY) / 2
+  };
+}
+
+function applyTransform() {
+  canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${currentScale})`;
+  canvas.style.transformOrigin = '0 0';
+}
+
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length === 2) {
+    e.preventDefault();
+    isSelecting = false; // cancel any selection in progress
+    pinchStartDist = getPinchDist(e.touches);
+    pinchStartScale = currentScale;
+    pinchMidStart = getPinchMid(e.touches);
+    pinchStartPanX = panX;
+    pinchStartPanY = panY;
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  if (e.touches.length === 2) {
+    e.preventDefault();
+    const dist = getPinchDist(e.touches);
+    const newScale = Math.min(Math.max(pinchStartScale * (dist / pinchStartDist), 0.5), 5);
+    
+    // Pan to keep pinch midpoint stable
+    const mid = getPinchMid(e.touches);
+    const scaleChange = newScale / pinchStartScale;
+    panX = mid.x - scaleChange * (pinchMidStart.x - pinchStartPanX);
+    panY = mid.y - scaleChange * (pinchMidStart.y - pinchStartPanY);
+    
+    currentScale = newScale;
+    applyTransform();
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+  if (e.touches.length < 2) {
+    pinchStartDist = null;
+  }
+});
+
+css
+#canvas {
+  transition: none;
+  touch-action: none;  /* prevents browser's default pinch-zoom interfering */
+}
+
