@@ -203,15 +203,22 @@ content.innerHTML = `
       <h3>Copy</h3>
       <p>To copy part of the image, drag your finger to draw a red selection box around the area you want.</p>
       <p>When the box appears, press the <strong>Copy</strong> button. The selected piece is stored in the clipboard.</p>
-      <p>Copying does not change the original image — it simply saves a duplicate of the selected area for later use.</p>
+      <p>Copying does not change the original image — it simply saves a duplicate of the selected area for later use.
+	 This duplicate is stored in the clipboard.</p>
     `;
     
     content.innerHTML += `
       <h3>Paste Mode</h3>
-      <p>After copying or cutting, press <strong>Paste</strong> to enter Paste Mode.</p>
-      <p>Drag the piece to position it anywhere on the image.</p>
-      <p>Tap again to finish placing it. The button text will change to “Finish” while you are positioning the piece.</p>
-      <p>Paste Mode stays active until you tap to confirm placement.</p>
+      <p>After copying or cutting, press <strong>Paste</strong> to enter Paste Mode.
+	  The Paste button will turn Green indicating you are in paste mode.</p>
+      <p>When you tap the screen now, you will see the contents of the clipboard; the selected
+	  area tht you just selected.</p>
+	  <p>Drag the piece to position it anywhere on the image.  The dragged piece will hve a blue 
+	  box around it.</p>
+      <p>Tap the Paste button again to finish placing it. This will meld the clipboard selection
+	  into the image.  You cannot undo this.  The selected area ia now part of the image.  
+	  <p>The original image is not changed only a copy of the image you loaded into the 
+	  program. To save this new imge you press the Save button.</p>
     `;
     } // copy
 
@@ -223,14 +230,16 @@ content.innerHTML = `
 
       <p><strong>How to Cut:</strong><br>
       1. Drag to select an area.<br>
-      2. Press <strong>Cut</strong>. The selected area is removed and saved.</p>
+      2. Press <strong>Cut</strong>. The selected area is removed and saved into 
+	  the clipboard.</p>
 
       <p><strong>How to Paste:</strong><br>
       1. Press <strong>Paste</strong> to enter Paste Mode.<br>
       2. Drag the piece to position it.<br>
-      3. Tap again to finish placing it.</p>
+      3. Tap Pastw again to finish placing it.</p>
 
-      <p>While in Paste Mode, the button text will change to guide you. You can reposition the piece as many times as you like before tapping to finish.</p>
+      <p>While in Paste Mode, the paste button will change fo a green colour.
+	  You can reposition the piece as many times as you like.</p>
     `;
     } // cutPaste
 
@@ -238,9 +247,12 @@ content.innerHTML = `
 	
 	content.innerHTML = `
       <h3>Saving Your Work</h3>
-      <p>You can export your edited chart at any time. Press the <strong>Export</strong> button to save your work as <strong>image.png</strong>.</p>
-      <p>The exported file contains everything currently visible on the canvas, including drawings, pasted pieces, and edits.</p>
-      <p>On some devices, the file will download automatically. On others, you may be asked where to save it.</p>
+      <p>You can export your edited imags at any time. Press the <strong>Save</strong> button 
+	  to save your work as <strong>image.png</strong>.</p>
+      <p>The exported file contains everything currently visible on the canvas, including 
+	  pasted pieces and if any section was cut out.</p>
+      <p>On some devices, the file will download automatically. 
+	  On others, you may be asked where to save it.</p>
     `;
 
     }
@@ -251,19 +263,24 @@ content.innerHTML = `
       <h3>FAQ</h3>
 
       <p><strong>Paste button is disabled:  </strong>
-      You must Copy or Cut something before you can paste.</p>
+      You must Copy or Cut something before you can use the paste button.</p>
 
       <p><strong>Selection box does not appear: </strong>
       Make sure you drag far enough for the system to detect a rectangle.</p>
 
       <p><strong>Paste Mode won't finish: </strong>
-      Tap once to place the piece. The button text will change when placement is complete.</p>
+      Tap once to place the piece. The Paste button will change to green.  Tap this green
+	  Paste button to finalize the paste and meld the contents on the clipboard into the 
+	  image</p>
 
       <p><strong>Exported image looks different: </strong>
-      Only what is visible on the canvas is saved. Make sure your edits are finalized before exporting.</p>
+      Only what is visible on the canvas is saved. Make sure your edits are finalized (the 
+	  Pastw button is not green) 
+	  before exporting.</p>
 
       <p><strong>Cut leaves a dark area: </strong>
-      This can happen if the original image contains transparency. Reload the image or redraw the area.</p>
+      This can happen if the original image contains transparency. Reload the image or redraw 
+	  the area.  All cut areas will leave a white tengle from what you cut out.</p>
     `;
     } // faq
 }
