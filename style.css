@@ -38,6 +38,7 @@ html, body {
     right: 0;
     bottom: 0;
     overflow: auto;
+/*    overflow: hidden; */          /* changed from auto to hidden */
     -webkit-overflow-scrolling: touch; 
     text-align: center; 
 }
@@ -52,6 +53,7 @@ canvas {
     margin: 0 auto;
     max-width: 85%;
     transition: none;
+/*    transform-origin: center top; */ /* zoom from top-center, not 0,0 */
 }
 
 .active {

@@ -39,11 +39,6 @@ let dragOffsetY = 0;
 let pinchStartDist = null;
 let pinchStartScale = 1;
 let currentScale = 1;
-let panX = 0;
-let panY = 0;
-let pinchStartPanX = 0;
-let pinchStartPanY = 0;
-let pinchMidStart = null;
 
 function getPinchDist(touches) {
   const dx = touches[0].clientX - touches[1].clientX;
@@ -51,23 +46,13 @@ function getPinchDist(touches) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
-function getPinchMid(touches) {
-  return {
-    x: (touches[0].clientX + touches[1].clientX) / 2,
-    y: (touches[0].clientY + touches[1].clientY) / 2
-  };
-}
-
-/*
 function applyTransform() {
-  canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${currentScale})`;
-  canvas.style.transformOrigin = '0 0';
-  }
-*/
+    // Clamp: can't go below 1 (original size), max 5x zoom in
+    currentScale = Math.max(1, Math.min(5, currentScale));
+    canvas.style.transform = `scale(${currentScale})`;
+    
+//    canvas.style.transformOrigin = "0 0";
 
-function applyTransform() {
-    ctx.setTransform(currentScale, 0, 0, currentScale, panX, panY);
-    redraw(); // redraws the image + selections + pasted pieces
 }
 
 // comes from copy and cut
@@ -186,6 +171,18 @@ fileInput.addEventListener('change', e => {
 // -------------------------
 // Coordinate correction
 // -------------------------
+/*
+function getCanvasCoords(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const scale = currentScale || 1;
+
+    const x = (clientX - rect.left) / scale;
+    const y = (clientY - rect.top)  / scale;
+
+    return { x, y };
+}
+*/
+// this one works
 function getCanvasCoords(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
@@ -195,6 +192,17 @@ function getCanvasCoords(clientX, clientY) {
 	y: (clientY - rect.top) * scaleY
     };
 }
+
+/* fix not working...
+function getCanvasCoords(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+
+    const x = (clientX - rect.left) / currentScale;
+    const y = (clientY - rect.top)  / currentScale;
+
+    return { x, y };
+}
+*/
 
 // -------------------------
 // Selection (mouse)
@@ -228,21 +236,18 @@ canvas.addEventListener('mouseup', () => finishSelection());
 // Selection (touch)
 // -------------------------
 canvas.addEventListener('touchstart', e => {
+   
+    if (!hasImage || pasteMode) return; // i moved this up from after pinch
 
     if (e.touches.length === 2) {
-	e.preventDefault();
-	isSelecting = false; // cancel any selection in progress
-	pinchStartDist = getPinchDist(e.touches);
-	pinchStartScale = currentScale;
-	pinchMidStart = getPinchMid(e.touches);
-	pinchStartPanX = panX;
-	pinchStartPanY = panY;
-    }//pinch
-    
-//}, { passive: false });
+    e.preventDefault();
+    isSelecting = false;
+    pinchStartDist = getPinchDist(e.touches);
+    pinchStartScale = currentScale;
+  } // pinch
 
-    if (!hasImage || pasteMode) return;
-e.preventDefault();
+    
+    e.preventDefault();
 
     const t = e.touches[0];
     const pos = getCanvasCoords(t.clientX, t.clientY);
@@ -253,6 +258,7 @@ e.preventDefault();
     currentY = pos.y;
 
     isSelecting = true;
+
 });
 
 canvas.addEventListener('touchmove', e => {
@@ -261,18 +267,10 @@ canvas.addEventListener('touchmove', e => {
     if (e.touches.length === 2) {
     e.preventDefault();
     const dist = getPinchDist(e.touches);
-    const newScale = Math.min(Math.max(pinchStartScale * (dist / pinchStartDist), 0.5), 5);
-    
-    // Pan to keep pinch midpoint stable
-    const mid = getPinchMid(e.touches);
-    const scaleChange = newScale / pinchStartScale;
-    panX = mid.x - scaleChange * (pinchMidStart.x - pinchStartPanX);
-    panY = mid.y - scaleChange * (pinchMidStart.y - pinchStartPanY);
-    
-    currentScale = newScale;
+    currentScale = pinchStartScale * (dist / pinchStartDist);
     applyTransform();
-    }//pinch
-    
+  } // pinch
+
     e.preventDefault();
 
     const t = e.touches[0];
@@ -286,9 +284,13 @@ canvas.addEventListener('touchmove', e => {
 });
 
 canvas.addEventListener('touchend', e => {
-if (e.touches.length < 2) {
-    pinchStartDist = null;
-  } //pinch
+
+    if (e.touches.length < 2) {
+	pinchStartDist = null;
+
+
+    }//pinch
+    
     if (!pasteMode) finishSelection();
 });
 
