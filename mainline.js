@@ -33,27 +33,6 @@ let draggingPasted = false;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
 
-// -------------------------
-// Pinch to Zoom (iPad)
-// -------------------------
-let pinchStartDist = null;
-let pinchStartScale = 1;
-let currentScale = 1;
-
-function getPinchDist(touches) {
-  const dx = touches[0].clientX - touches[1].clientX;
-  const dy = touches[0].clientY - touches[1].clientY;
-  return Math.sqrt(dx * dx + dy * dy);
-}
-
-function applyTransform() {
-    // Clamp: can't go below 1 (original size), max 5x zoom in
-    currentScale = Math.max(1, Math.min(5, currentScale));
-    canvas.style.transform = `scale(${currentScale})`;
-    
-//    canvas.style.transformOrigin = "0 0";
-
-}
 
 // comes from copy and cut
 function activatePasteMode() {
@@ -232,67 +211,6 @@ canvas.addEventListener('mousemove', e => {
 
 canvas.addEventListener('mouseup', () => finishSelection());
 
-// -------------------------
-// Selection (touch)
-// -------------------------
-canvas.addEventListener('touchstart', e => {
-   
-    if (!hasImage || pasteMode) return; // i moved this up from after pinch
-
-    if (e.touches.length === 2) {
-    e.preventDefault();
-    isSelecting = false;
-    pinchStartDist = getPinchDist(e.touches);
-    pinchStartScale = currentScale;
-  } // pinch
-
-    
-    e.preventDefault();
-
-    const t = e.touches[0];
-    const pos = getCanvasCoords(t.clientX, t.clientY);
-
-    startX = pos.x;
-    startY = pos.y;
-    currentX = pos.x;
-    currentY = pos.y;
-
-    isSelecting = true;
-
-});
-
-canvas.addEventListener('touchmove', e => {
-    if (!isSelecting || !hasImage || pasteMode) return;
-
-    if (e.touches.length === 2) {
-    e.preventDefault();
-    const dist = getPinchDist(e.touches);
-    currentScale = pinchStartScale * (dist / pinchStartDist);
-    applyTransform();
-  } // pinch
-
-    e.preventDefault();
-
-    const t = e.touches[0];
-    const pos = getCanvasCoords(t.clientX, t.clientY);
-
-    currentX = pos.x;
-    currentY = pos.y;
-
-    redraw();
-    drawSelectionRect();
-});
-
-canvas.addEventListener('touchend', e => {
-
-    if (e.touches.length < 2) {
-	pinchStartDist = null;
-
-
-    }//pinch
-    
-    if (!pasteMode) finishSelection();
-});
 
 // -------------------------
 // Paste Mode tap handler
@@ -344,25 +262,6 @@ function handlePasteModeTap(x, y) {
     safeRedraw();
 }
 
-// -------------------------
-// Dragging pasted object
-// -------------------------
-canvas.addEventListener('touchmove', e => {
-    if (!draggingPasted || !pastedSelected) return;
-
-    const t = e.touches[0];
-    const pos = getCanvasCoords(t.clientX, t.clientY);
-
-    pastedObject.x = pos.x - dragOffsetX;
-    pastedObject.y = pos.y - dragOffsetY;
-
-    redraw();
-    drawPastedOutline();
-});
-
-canvas.addEventListener('touchend', () => {
-    draggingPasted = false;
-});
 
 // -------------------------
 // Finish selection
@@ -591,18 +490,6 @@ function isInsidePastedObject(x, y) {
 // -------------------------
 // Double-tap / double-click to activate Paste Mode
 // -------------------------
-let lastTapTime = 0;
-
-canvas.addEventListener('touchend', e => {
-    const now = Date.now();
-    if (now - lastTapTime < 300) {   // double-tap threshold
-        activatePasteMode();
-    }
-    lastTapTime = now;
-    
-//    dei("pasteModeBtn").textContent = "Tap to Paste";
-
-});
 
 canvas.addEventListener('dblclick', e => {
     activatePasteMode();
